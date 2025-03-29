@@ -4,7 +4,7 @@ This project shows how to run Oracle Database inside Kubernetes using Docker and
 
 ---
 
-## 🧰 What You Need Installed
+## Requirements/Dependancies
 
 - **Docker Desktop** (with WSL2 backend enabled)
 - **Minikube** (Docker driver)
@@ -14,7 +14,7 @@ This project shows how to run Oracle Database inside Kubernetes using Docker and
 
 ---
 
-## 📁 Project Folder Structure
+## Project Folder Structure
 
 ```bash
 /oracle-k8s
