@@ -1,216 +1,155 @@
-# 🐘 Oracle XE + Docker + Kubernetes Deployment (Step-by-Step Guide)
+# Oracle + Kubernetes + Docker Project (Guide)
 
-This guide walks you through deploying Oracle XE locally using **Docker**, and then deploying the same setup into **Kubernetes using Minikube**, with a clean custom schema (`psuser`) and SQL script (`PS1.sql`).
-
----
-
-## 📦 Prerequisites
-
-- Docker installed and running
-- Minikube installed (with Docker driver)
-- kubectl installed
-- Oracle account to access Oracle Container Registry
-- PowerShell (Admin)
+This project shows how to run Oracle Database inside Kubernetes using Docker and connect to it like a normal Oracle database. You can upload SQL files, create users, and everything stays running even if you restart. No need to recreate it all every time.
 
 ---
 
-## 🚀 Phase 1: Oracle XE in Docker (Local Setup)
+## 🧰 What You Need Installed
 
-### ✅ Step 1: Login to Oracle Container Registry
+- **Docker Desktop** (with WSL2 backend enabled)
+- **Minikube** (Docker driver)
+- **kubectl**
+- **Oracle Account** (to pull the Oracle XE image)
+- **PowerShell (Admin)**
+
+---
+
+## 📁 Project Folder Structure
+
+```bash
+/oracle-k8s
+  ├── PS1.sql   # Schema creation
+  ├── PS2.sql   # Data + constraints (optional)
+  └── oracle-deployment.yaml
+```
+
+---
+
+## 🐳 Step 1: Pull the Oracle XE Docker Image
+
 ```powershell
 docker login container-registry.oracle.com
-```
-Enter your Oracle SSO username + password.
+# (use your Oracle credentials)
 
-### ✅ Step 2: Pull the Oracle XE Docker Image
-```powershell
 docker pull container-registry.oracle.com/database/express:21.3.0-xe
 ```
 
-### ✅ Step 3: Start Oracle XE Container
-```powershell
-docker run -d --name oracle-xe ^
-  -p 1521:1521 -p 5500:5500 ^
-  -e ORACLE_PWD=Oracle2025 ^
-  -v oracle-data:/opt/oracle/oradata ^
-  container-registry.oracle.com/database/express:21.3.0-xe
-```
-
-### ✅ Step 4: Wait for DB Initialization
-```powershell
-docker logs -f oracle-xe
-```
-Wait for:
-```
-DATABASE IS READY TO USE!
-```
-
-### ✅ Step 5: Create a Custom User
-```powershell
-docker exec -it oracle-xe bash
-```
-Then inside the container:
-```bash
-sqlplus sys/Oracle2025@localhost:1521/XEPDB1 as sysdba
-```
-```sql
-CREATE USER psuser IDENTIFIED BY PsUser2025;
-GRANT CONNECT, RESOURCE TO psuser;
-```
-
-### ✅ Step 6: Upload and Run PS1.sql
-```powershell
-docker cp "C:\Users\Karth\PS\PS1.sql" oracle-xe:/home/oracle/PS1.sql
-```
-Back in the container:
-```bash
-sqlplus psuser/PsUser2025@localhost:1521/XEPDB1
-```
-```sql
-@/home/oracle/PS1.sql
-SELECT table_name FROM user_tables;
-```
-
 ---
 
-## ☸️ Phase 2: Oracle XE in Kubernetes (Minikube)
+## 🧠 Step 2: Start Minikube with Docker Driver
 
-### ✅ Step 1: Start Minikube with Docker Driver
 ```powershell
-minikube start --driver=docker --memory=6000 --cpus=2
-```
-
-### ✅ Step 2: Prepare YAML Deployment File
-Create `oracle-deployment.yaml`:
-```yaml
-apiVersion: v1
-kind: PersistentVolumeClaim
-metadata:
-  name: oracle-pvc
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 5Gi
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: oracle-db
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: oracle
-  template:
-    metadata:
-      labels:
-        app: oracle
-    spec:
-      containers:
-        - name: oracle
-          image: container-registry.oracle.com/database/express:21.3.0-xe
-          ports:
-            - containerPort: 1521
-            - containerPort: 5500
-          env:
-            - name: ORACLE_PWD
-              value: "Oracle2025"
-          volumeMounts:
-            - mountPath: /opt/oracle/oradata
-              name: oracle-storage
-      volumes:
-        - name: oracle-storage
-          persistentVolumeClaim:
-            claimName: oracle-pvc
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: oracle-service
-spec:
-  type: NodePort
-  selector:
-    app: oracle
-  ports:
-    - name: db-port
-      port: 1521
-      targetPort: 1521
-      nodePort: 31521
-    - name: web-port
-      port: 5500
-      targetPort: 5500
-      nodePort: 32500
-```
-
-### ✅ Step 3: Load Oracle Image into Minikube
-```powershell
+minikube start --driver=docker
 minikube image load container-registry.oracle.com/database/express:21.3.0-xe
 ```
 
-> ⏳ This may take 10–20 mins. It silently transfers ~7GB.
+This will start the Kubernetes cluster and load the Oracle image.
 
-### ✅ Step 4: Deploy to Kubernetes
+---
+
+## 📦 Step 3: Deploy Oracle in Kubernetes
+
+Make sure your `oracle-deployment.yaml` file is ready. Then:
+
 ```powershell
 kubectl apply -f oracle-deployment.yaml
-```
-
-### ✅ Step 5: Monitor Pod
-```powershell
 kubectl get pods -w
 ```
-Wait for:
-```
-STATUS: Running
-READY: 1/1
-```
+
+Wait until the pod shows `Running`.
 
 ---
 
-## 🧑‍💻 Inside Kubernetes: Setup Schema
+## 👤 Step 4: Create a Custom User (Example: C##UD_ASH)
 
-### ✅ Step 6: Exec Into the Pod
 ```powershell
-kubectl exec -it <pod-name> -- bash
+kubectl exec deploy/oracle-db -- bash -c "echo -e 'CREATE USER C##UD_ASH IDENTIFIED BY UdAsh2025 CONTAINER=ALL;\nGRANT CONNECT, RESOURCE TO C##UD_ASH CONTAINER=ALL;' | /opt/oracle/product/21c/dbhomeXE/bin/sqlplus sys/Oracle2025@localhost:1521/XE as sysdba"
 ```
 
-### ✅ Step 7: Create `psuser`
-```bash
-sqlplus sys/Oracle2025@localhost:1521/XEPDB1 as sysdba
-```
-```sql
-CREATE USER psuser IDENTIFIED BY PsUser2025;
-GRANT CONNECT, RESOURCE TO psuser;
-```
+---
 
-### ✅ Step 8: Copy and Run `PS1.sql`
+## 📂 Step 5: Upload Your SQL File (e.g. PS1.sql)
+
 ```powershell
-kubectl cp "C:\Users\Karth\PS\PS1.sql" <pod-name>:/home/oracle/PS1.sql
-```
-```bash
-sqlplus psuser/PsUser2025@localhost:1521/XEPDB1
-@/home/oracle/PS1.sql
+kubectl cp "C:/path/to/oracle-k8s/PS1.sql" <your-pod-name>:/home/oracle/PS1.sql
 ```
 
-### ✅ Step 9: Verify
-```sql
-SELECT table_name FROM user_tables;
+To get your pod name:
+```powershell
+kubectl get pods
 ```
 
 ---
 
-## 🎉 You Did It!
+## ▶️ Step 6: Run SQL File as Your Custom User
 
-You now have:
-- Oracle XE in Docker ✅
-- Oracle XE in Kubernetes ✅
-- A clean schema (`psuser`) for your class assignments ✅
-- Fully documented, repeatable setup ✅
-
-Use this guide as your README for GitHub or any future projects.
+```powershell
+kubectl exec <your-pod-name> -- \
+  bash -c "/opt/oracle/product/21c/dbhomeXE/bin/sqlplus C##UD_ASH/UdAsh2025@localhost:1521/XE @/home/oracle/PS1.sql"
+```
 
 ---
 
-Feel free to automate later using Helm or CI/CD. For now — this is a rock-solid manual foundation. 🚀
+## 🔍 Step 7: Check If Tables Were Created
+
+```powershell
+kubectl exec <your-pod-name> -- \
+  bash -c "/opt/oracle/product/21c/dbhomeXE/bin/sqlplus -s C##UD_ASH/UdAsh2025@localhost:1521/XE <<< 'SELECT table_name FROM user_tables;'"
+```
+
+---
+
+## 🧠 SQL+ Interactive Mode (Just Like SQL Developer)
+
+```powershell
+kubectl exec -it <your-pod-name> -- bash
+
+# Inside the pod:
+/opt/oracle/product/21c/dbhomeXE/bin/sqlplus C##UD_ASH/UdAsh2025@localhost:1521/XE
+```
+
+Then you can run whatever SQL you want.
+
+---
+
+## 🧾 Info You’ll Want to Remember
+
+| Thing              | Value Example                           |
+|-------------------|------------------------------------------|
+| Pod Name          | `oracle-db-5469757c8-kht7c`              |
+| DB Name           | `XE`                                     |
+| Custom Username   | `C##UD_ASH`                              |
+| Password          | `UdAsh2025`                              |
+| Deployment Name   | `oracle-db`                              |
+| SQL File Path     | `/home/oracle/PS1.sql` inside the pod    |
+
+---
+
+## 🧯 If You Restart Your PC
+
+```powershell
+minikube start
+kubectl get pods
+```
+
+If the pod isn’t running, use:
+```powershell
+kubectl rollout restart deployment oracle-db
+```
+
+Then reconnect using the same commands.
+
+---
+
+## 🚫 Do You Need to Docker Login Again?
+Only if you:
+- Wipe Docker
+- Delete Docker config
+- Pull the Oracle image again
+
+Else: **you’re good** 👍
+
+---
+
+That’s it! You now have a real Oracle XE instance inside Kubernetes with your own schema, tables, and SQL files. No Oracle SQL Developer needed. You’re a wizard 🧙‍♂️
 
