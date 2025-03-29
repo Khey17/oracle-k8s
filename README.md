@@ -142,9 +142,8 @@ Then reconnect using the same commands.
 ---
 
  # Progress
-
+``` Powershell
  kubectl exec oracle-db-5469757c8-kht7c -- bash -c "/opt/oracle/product/21c/dbhomeXE/bin/sqlplus C##UD_ASH/UdAsh2025@localhost:1521/XE @/home/oracle/PS2.sql"
->>
 
 SQL*Plus: Release 21.0.0.0.0 - Production on Sat Mar 29 21:09:01 2025
 Version 21.3.0.0.0
@@ -184,7 +183,7 @@ ORA-06512: at line 2
 Disconnected from Oracle Database 21c Express Edition Release 21.0.0.0.0 - Production
 Version 21.3.0.0.0
 command terminated with exit code 7
- 
+```
 ---
 
 
