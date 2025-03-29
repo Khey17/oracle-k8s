@@ -112,7 +112,7 @@ Then you can run whatever SQL you want.
 
 ---
 
-## Want to Remember
+## Things to Remember
 
 | Thing              | Value Example                           |
 |-------------------|------------------------------------------|
