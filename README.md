@@ -25,7 +25,7 @@ This project shows how to run Oracle Database inside Kubernetes using Docker and
 
 ---
 
-## 🐳 Step 1: Pull the Oracle XE Docker Image
+## Pull the Oracle XE Docker Image
 
 ```powershell
 docker login container-registry.oracle.com
@@ -36,7 +36,7 @@ docker pull container-registry.oracle.com/database/express:21.3.0-xe
 
 ---
 
-## 🧠 Step 2: Start Minikube with Docker Driver
+## Start Minikube with Docker Driver
 
 ```powershell
 minikube start --driver=docker
@@ -47,7 +47,7 @@ This will start the Kubernetes cluster and load the Oracle image.
 
 ---
 
-## 📦 Step 3: Deploy Oracle in Kubernetes
+## Deploy Oracle in Kubernetes
 
 Make sure your `oracle-deployment.yaml` file is ready. Then:
 
@@ -60,7 +60,7 @@ Wait until the pod shows `Running`.
 
 ---
 
-## 👤 Step 4: Create a Custom User (Example: C##UD_ASH)
+## Create a Custom User (Example: C##UD_ASH)
 
 ```powershell
 kubectl exec deploy/oracle-db -- bash -c "echo -e 'CREATE USER C##UD_ASH IDENTIFIED BY UdAsh2025 CONTAINER=ALL;\nGRANT CONNECT, RESOURCE TO C##UD_ASH CONTAINER=ALL;' | /opt/oracle/product/21c/dbhomeXE/bin/sqlplus sys/Oracle2025@localhost:1521/XE as sysdba"
@@ -68,7 +68,7 @@ kubectl exec deploy/oracle-db -- bash -c "echo -e 'CREATE USER C##UD_ASH IDENTIF
 
 ---
 
-## 📂 Step 5: Upload Your SQL File (e.g. PS1.sql)
+## Upload Your SQL File (e.g. PS1.sql)
 
 ```powershell
 kubectl cp "C:/path/to/oracle-k8s/PS1.sql" <your-pod-name>:/home/oracle/PS1.sql
@@ -81,7 +81,7 @@ kubectl get pods
 
 ---
 
-## ▶️ Step 6: Run SQL File as Your Custom User
+## Run SQL File as Your Custom User
 
 ```powershell
 kubectl exec <your-pod-name> -- \
@@ -90,7 +90,7 @@ kubectl exec <your-pod-name> -- \
 
 ---
 
-## 🔍 Step 7: Check If Tables Were Created
+## Check If Tables Were Created
 
 ```powershell
 kubectl exec <your-pod-name> -- \
@@ -99,7 +99,7 @@ kubectl exec <your-pod-name> -- \
 
 ---
 
-## 🧠 SQL+ Interactive Mode (Just Like SQL Developer)
+## SQL + Interactive Mode (Just Like SQL Developer)
 
 ```powershell
 kubectl exec -it <your-pod-name> -- bash
@@ -112,7 +112,7 @@ Then you can run whatever SQL you want.
 
 ---
 
-## 🧾 Info You’ll Want to Remember
+## Want to Remember
 
 | Thing              | Value Example                           |
 |-------------------|------------------------------------------|
@@ -125,7 +125,7 @@ Then you can run whatever SQL you want.
 
 ---
 
-## 🧯 If You Restart Your PC
+## If You Restart Your PC
 
 ```powershell
 minikube start
@@ -141,15 +141,50 @@ Then reconnect using the same commands.
 
 ---
 
-## 🚫 Do You Need to Docker Login Again?
-Only if you:
-- Wipe Docker
-- Delete Docker config
-- Pull the Oracle image again
+ # Progress
 
-Else: **you’re good** 👍
+ kubectl exec oracle-db-5469757c8-kht7c -- bash -c "/opt/oracle/product/21c/dbhomeXE/bin/sqlplus C##UD_ASH/UdAsh2025@localhost:1521/XE @/home/oracle/PS2.sql"
+>>
 
+SQL*Plus: Release 21.0.0.0.0 - Production on Sat Mar 29 21:09:01 2025
+Version 21.3.0.0.0
+
+Copyright (c) 1982, 2021, Oracle.  All rights reserved.
+
+Last Successful login time: Sat Mar 29 2025 20:38:38 +00:00
+
+Connected to:
+Oracle Database 21c Express Edition Release 21.0.0.0.0 - Production
+Version 21.3.0.0.0
+
+
+MSG
+--------------------------------------------------------------------------------
+Begin Executing 01@ /home/oracle/PS2.sql
+
+
+Procedure created.
+
+
+Procedure created.
+
+
+Procedure created.
+
+BEGIN
+*
+ERROR at line 1:
+ORA-01031: insufficient privileges
+ORA-06512: at "C##UD_ASH.PRC_CREATE_TRG01_TRIGGERS", line 19
+ORA-06512: at "C##UD_ASH.PRC_CREATE_TRIGGERS", line 27
+ORA-06512: at "C##UD_ASH.PRC_CREATE_TRIGGERS", line 27
+ORA-06512: at line 2
+
+
+Disconnected from Oracle Database 21c Express Edition Release 21.0.0.0.0 - Production
+Version 21.3.0.0.0
+command terminated with exit code 7
+ 
 ---
 
-That’s it! You now have a real Oracle XE instance inside Kubernetes with your own schema, tables, and SQL files. No Oracle SQL Developer needed. You’re a wizard 🧙‍♂️
 
