@@ -143,46 +143,18 @@ Then reconnect using the same commands.
 
  # Progress
 ``` Powershell
- kubectl exec oracle-db-5469757c8-kht7c -- bash -c "/opt/oracle/product/21c/dbhomeXE/bin/sqlplus C##UD_ASH/UdAsh2025@localhost:1521/XE @/home/oracle/PS2.sql"
+ bash-4.2$ sqlplus UD_ASHOKK/XXXX@98.84.13.6:1521/FREEPDB1
 
-SQL*Plus: Release 21.0.0.0.0 - Production on Sat Mar 29 21:09:01 2025
+SQL*Plus: Release 21.0.0.0.0 - Production on Tue Apr 1 21:49:12 2025
 Version 21.3.0.0.0
 
 Copyright (c) 1982, 2021, Oracle.  All rights reserved.
 
-Last Successful login time: Sat Mar 29 2025 20:38:38 +00:00
+Last Successful login time: Sat Mar 22 2025 14:42:26 +00:00
 
 Connected to:
-Oracle Database 21c Express Edition Release 21.0.0.0.0 - Production
-Version 21.3.0.0.0
-
-
-MSG
---------------------------------------------------------------------------------
-Begin Executing 01@ /home/oracle/PS2.sql
-
-
-Procedure created.
-
-
-Procedure created.
-
-
-Procedure created.
-
-BEGIN
-*
-ERROR at line 1:
-ORA-01031: insufficient privileges
-ORA-06512: at "C##UD_ASH.PRC_CREATE_TRG01_TRIGGERS", line 19
-ORA-06512: at "C##UD_ASH.PRC_CREATE_TRIGGERS", line 27
-ORA-06512: at "C##UD_ASH.PRC_CREATE_TRIGGERS", line 27
-ORA-06512: at line 2
-
-
-Disconnected from Oracle Database 21c Express Edition Release 21.0.0.0.0 - Production
-Version 21.3.0.0.0
-command terminated with exit code 7
+Oracle Database 23ai Free Release 23.0.0.0.0 - Production
+Version 23.4.0.24.05
 ```
 ---
 
