@@ -49,7 +49,7 @@ This will start the Kubernetes cluster and load the Oracle image.
 
 ## Deploy Oracle in Kubernetes
 
-Make sure your `oracle-deployment.yaml` file is ready. Then:
+Make sure the `oracle-deployment.yaml` file is ready. Then:
 
 ```powershell
 kubectl apply -f oracle-deployment.yaml
@@ -60,68 +60,37 @@ Wait until the pod shows `Running`.
 
 ---
 
-## Create a Custom User (Example: C##UD_ASH)
+## Connect to the Registered Oracle Database remotely 
 
 ```powershell
-kubectl exec deploy/oracle-db -- bash -c "echo -e 'CREATE USER C##UD_ASH IDENTIFIED BY UdAsh2025 CONTAINER=ALL;\nGRANT CONNECT, RESOURCE TO C##UD_ASH CONTAINER=ALL;' | /opt/oracle/product/21c/dbhomeXE/bin/sqlplus sys/Oracle2025@localhost:1521/XE as sysdba"
+kubectl exec -it oracle-db-XXXXX (podname) -- bash
 ```
 
 ---
 
-## Upload Your SQL File (e.g. PS1.sql)
+## Inside Bash
 
-```powershell
-kubectl cp "C:/path/to/oracle-k8s/PS1.sql" <your-pod-name>:/home/oracle/PS1.sql
-```
-
-To get your pod name:
-```powershell
-kubectl get pods
+```bash
+sqlplus Username/YourPassword@IPAddress/ServiceName (for example, FREEPDB1 in our case)
 ```
 
 ---
 
-## Run SQL File as Your Custom User
+## You should see the following snippet
 
-```powershell
-kubectl exec <your-pod-name> -- \
-  bash -c "/opt/oracle/product/21c/dbhomeXE/bin/sqlplus C##UD_ASH/UdAsh2025@localhost:1521/XE @/home/oracle/PS1.sql"
+```sql
+SQL*Plus: Release 21.0.0.0.0 - Production on Tue Apr 1 21:49:12 2025
+Version 21.3.0.0.0
+
+Copyright (c) 1982, 2021, Oracle.  All rights reserved.
+
+Last Successful login time: Sat Mar 22 2025 14:42:26 +00:00
+
+Connected to:
+Oracle Database 23ai Free Release 23.0.0.0.0 - Production
+Version 23.4.0.24.05
+SQL>
 ```
-
----
-
-## Check If Tables Were Created
-
-```powershell
-kubectl exec <your-pod-name> -- \
-  bash -c "/opt/oracle/product/21c/dbhomeXE/bin/sqlplus -s C##UD_ASH/UdAsh2025@localhost:1521/XE <<< 'SELECT table_name FROM user_tables;'"
-```
-
----
-
-## SQL + Interactive Mode (Just Like SQL Developer)
-
-```powershell
-kubectl exec -it <your-pod-name> -- bash
-
-# Inside the pod:
-/opt/oracle/product/21c/dbhomeXE/bin/sqlplus C##UD_ASH/UdAsh2025@localhost:1521/XE
-```
-
-Then you can run whatever SQL you want.
-
----
-
-## Things to Remember
-
-| Thing              | Value Example                           |
-|-------------------|------------------------------------------|
-| Pod Name          | `oracle-db-5469757c8-kht7c`              |
-| DB Name           | `XE`                                     |
-| Custom Username   | `C##UD_ASH`                              |
-| Password          | `UdAsh2025`                              |
-| Deployment Name   | `oracle-db`                              |
-| SQL File Path     | `/home/oracle/PS1.sql` inside the pod    |
 
 ---
 
